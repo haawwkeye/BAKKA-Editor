@@ -4,8 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Drawing.Drawing2D;
 using System.Threading.Tasks;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
-using System.ComponentModel;
+using IrrKlang;
 
 namespace BAKKA_Editor
 {
@@ -255,6 +254,39 @@ namespace BAKKA_Editor
             return theta;
         }
 
+        //public float MeasureToSeconds(float measure)
+        //{
+        //    return (60f / (float)MainForm.initSettingsForm.Bpm) * measure;
+        //}
+
+        public void PlayHitSound(Chart chart, Note note)
+        {
+            if (!File.Exists(MainForm.noteFilePath) || MainForm.currentSong.Paused) return;
+            //var nm = note.Measure;
+            //var cm = CurrentMeasure;
+            float abs = (chart.GetTime(new BeatInfo(note.Measure))/1000f) - (chart.GetTime(new BeatInfo(CurrentMeasure))/1000f);
+            float shouldPlayFloat = Math.Abs(abs);
+            float max = 0.05f;
+            //Debug.WriteLine(shouldPlayFloat);
+            if (!note.hitPlayed && shouldPlayFloat <= max)
+            {
+                note.hitPlayed = true;
+                Task.Factory.StartNew(() => {
+                    ISound hit = MainForm.soundEngine.Play2D(MainForm.noteFilePath, false, true);
+                    // This should (hopefully) fix the sound being off by ~0.05 seconds
+                    //Thread.Sleep((int)Math.Floor(abs * 1000f));
+                    hit.Volume = Math.Clamp(MainForm.userSettings.ViewSettings.NoteVolume/100f, 0f, 1f);
+                    hit.Paused = false;
+
+                    // Wait for the hit to be finished before disposing of the note
+                    while (!hit.Finished) { }
+                    hit.Stop(); // Make sure to stop the note before disposing
+                    hit.Dispose();
+                });
+            }
+            else if (shouldPlayFloat > max) note.hitPlayed = false;
+        }
+
         public void DrawBackground(int width, int height, Color color)
         {
             Rectangle panelRect = new Rectangle(0, 0, width, height);
@@ -489,6 +521,8 @@ namespace BAKKA_Editor
                     bufGraphics.Graphics.FillPath(HoldBrush, path);
                 }
 
+                PlayHitSound(chart, note);
+
                 // Draw note
                 if (info.Rect.Width >= 1)
                 {
@@ -516,9 +550,12 @@ namespace BAKKA_Editor
             x => x.Measure >= CurrentMeasure
             && x.Measure <= (CurrentMeasure + GetTotalMeasureShowNotes(chart))
             && !x.IsHold && !x.IsMask).ToList();
+
             foreach (var note in drawNotes)
             {
                 ArcInfo info = GetArcInfo(chart, note);
+
+                PlayHitSound(chart, note);
 
                 if (info.Rect.Width >= 1)
                 {

@@ -66,6 +66,8 @@ namespace BAKKA_Editor
         public int Position { get; set; }
         public int Size { get; set; }
         [System.ComponentModel.Browsable(false)]
+        public bool hitPlayed { get; set; } = false;
+        [System.ComponentModel.Browsable(false)]
         public bool HoldChange { get; set; }
         [System.ComponentModel.Browsable(false)]
         public MaskType MaskFill { get; set; }
