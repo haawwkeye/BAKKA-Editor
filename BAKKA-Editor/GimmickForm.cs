@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 
 namespace BAKKA_Editor
 {
@@ -20,7 +22,12 @@ namespace BAKKA_Editor
         float StopEndMeasure { get { return (float)stopEndMeasureNumeric.Value + (float)stopEndBeat1Numeric.Value / (float)stopEndBeat2Numeric.Value; } }
         float RevEnd1Measure { get { return (float)revEnd1MeasureNumeric.Value + (float)revEnd1Beat1Numeric.Value / (float)revEnd1Beat2Numeric.Value; } }
         float RevEnd2Measure { get { return (float)revEnd2MeasureNumeric.Value + (float)revEnd2Beat1Numeric.Value / (float)revEnd2Beat2Numeric.Value; } }
+        int StartTimeMS { get { return (int)startTimeMSNumeric.Value; } }
 
+        public void Reset()
+        {
+            startTimeMSNumeric.Value = 0;
+        }
 
         public enum FormReason
         {
@@ -46,6 +53,7 @@ namespace BAKKA_Editor
             {
                 case GimmickType.BpmChange:
                     startMeasureNumeric.Value = gimmick.BeatInfo.Measure;
+                    startTimeMSNumeric.Value = (decimal)gimmick.StartTime;
                     startBeat2Numeric.Value = quant.Item2;
                     startBeat1Numeric.Value = quant.Item1;
                     if (reason == FormReason.Edit)
@@ -53,6 +61,7 @@ namespace BAKKA_Editor
                     break;
                 case GimmickType.TimeSignatureChange:
                     startMeasureNumeric.Value = gimmick.BeatInfo.Measure;
+                    startTimeMSNumeric.Value = (decimal)gimmick.StartTime;
                     startBeat2Numeric.Value = quant.Item2;
                     startBeat1Numeric.Value = quant.Item1;
                     if (reason == FormReason.Edit)
@@ -63,6 +72,7 @@ namespace BAKKA_Editor
                     break;
                 case GimmickType.HiSpeedChange:
                     startMeasureNumeric.Value = gimmick.BeatInfo.Measure;
+                    startTimeMSNumeric.Value = (decimal)gimmick.StartTime;
                     startBeat2Numeric.Value = quant.Item2;
                     startBeat1Numeric.Value = quant.Item1;
                     if (reason == FormReason.Edit)
@@ -70,6 +80,7 @@ namespace BAKKA_Editor
                     break;
                 case GimmickType.ReverseStart:
                     startMeasureNumeric.Value = gimmick.BeatInfo.Measure;
+                    startTimeMSNumeric.Value = (decimal)gimmick.StartTime;
                     startBeat2Numeric.Value = quant.Item2;
                     startBeat1Numeric.Value = quant.Item1;
                     if (reason == FormReason.Edit && gim1 != null && gim2 != null)
@@ -88,6 +99,7 @@ namespace BAKKA_Editor
                     var quantStart2 = Utils.GetQuantization(gim1.BeatInfo.Beat, 12);
                     var quantEnd2 = Utils.GetQuantization(gim2.BeatInfo.Beat, 12);
                     startMeasureNumeric.Value = gim1.BeatInfo.Measure;
+                    startTimeMSNumeric.Value = (decimal)gim1.StartTime;
                     startBeat2Numeric.Value = quantStart2.Item2;
                     startBeat1Numeric.Value = quantStart2.Item1;
                     revEnd1MeasureNumeric.Value = gimmick.BeatInfo.Measure;
@@ -101,6 +113,7 @@ namespace BAKKA_Editor
                     var quantStart3 = Utils.GetQuantization(gim1.BeatInfo.Beat, 12);
                     var quantMid3 = Utils.GetQuantization(gim2.BeatInfo.Beat, 12);
                     startMeasureNumeric.Value = gim1.BeatInfo.Measure;
+                    startTimeMSNumeric.Value = (decimal)gim1.StartTime;
                     startBeat2Numeric.Value = quantStart3.Item2;
                     startBeat1Numeric.Value = quantStart3.Item1;
                     revEnd1MeasureNumeric.Value = gim2.BeatInfo.Measure;
@@ -125,6 +138,7 @@ namespace BAKKA_Editor
                 case GimmickType.StopEnd:
                     var stopStart = Utils.GetQuantization(gim1.BeatInfo.Beat, 12);
                     startMeasureNumeric.Value = gim1.BeatInfo.Measure;
+                    startTimeMSNumeric.Value = (decimal)gim1.StartTime;
                     startBeat2Numeric.Value = stopStart.Item2;
                     startBeat1Numeric.Value = stopStart.Item1;
                     stopEndMeasureNumeric.Value = gimmick.BeatInfo.Measure;
@@ -320,7 +334,7 @@ namespace BAKKA_Editor
                 revEnd2Beat1Numeric.Value = revEnd1Beat1Numeric.Value;
                 revEnd2Beat2Numeric.Value = revEnd1Beat2Numeric.Value;
             }
-        }        
+        }
 
         private void revEnd1Beat1Numeric_ValueChanged(object sender, EventArgs e)
         {
@@ -389,6 +403,25 @@ namespace BAKKA_Editor
                     revEnd2Beat1Numeric.Value = 0;
                 }
             }
+        }
+
+        private double getMeasureFromTime(Chart chart, double time)
+        {
+            Gimmick? evt = chart.Gimmicks.FirstOrDefault(x => x.StartTime >= (double)time && x.GimmickType == GimmickType.BpmChange);
+            if (evt == null) return -1;
+            return time / ((60000.0 / evt.BPM) * 4.0 * evt.TimeSig.Ratio);
+        }
+
+        private void startTimeMSNumeric_ValueChanged(object sender, EventArgs e)
+        {
+            if (MainForm.Instance == null || MainForm.Instance.chart == null) return;
+
+            Chart chart = MainForm.Instance.chart;
+            float time = (float)startTimeMSNumeric.Value / 1000f;
+
+            double measure = getMeasureFromTime(chart, time);
+            if (measure == -1) return;
+            startMeasureNumeric.Value = (decimal)measure;
         }
     }
 }
