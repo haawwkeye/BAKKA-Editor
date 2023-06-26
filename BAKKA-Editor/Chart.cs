@@ -22,7 +22,7 @@ namespace BAKKA_Editor
         /// </summary>
         public double MovieOffset { get; set; }
         String SongFileName { get; set; }
-        List<Gimmick> TimeEvents { get; set; }
+        public List<Gimmick> TimeEvents { get; set; }
         public bool HasInitEvents
         {
             get

@@ -1,7 +1,9 @@
 {
   "profiles": {
     "BAKKA-Editor": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "remoteDebugEnabled": false,
+      "hotReloadEnabled": true
     }
   }
 }

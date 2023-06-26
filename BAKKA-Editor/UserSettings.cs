@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 namespace BAKKA_Editor
 {
 
-    internal class UserSettings
+    public class UserSettings
     {
         public ViewSettings ViewSettings { get; set; } = new();
         public SaveSettings SaveSettings { get; set; } = new();
         public HotkeySettings HotkeySettings { get; set; } = new();
     }
 
-    internal class ViewSettings
+    public class ViewSettings
     {
         public bool ShowCursor { get; set; } = true;
         public bool ShowCursorDuringPlayback { get; set; } = false;
@@ -25,9 +25,10 @@ namespace BAKKA_Editor
         public bool ShowGimmicksDuringPlayback { get; set; } = true;
         public float HispeedSetting { get; set; } = 1.5f;
         public int Volume { get; set; } = 100;
+        public int NoteVolume { get; set; } = 0;
     }
 
-    internal class SaveSettings
+    public class SaveSettings
     {
         /// <summary>
         /// How frequently autosave occurs (in minutes)
@@ -35,7 +36,7 @@ namespace BAKKA_Editor
         public int AutoSaveInterval { get; set; } = 1;
     }
 
-    internal class HotkeySettings
+    public class HotkeySettings
     {
         private static readonly CultureInfo _defaultParsingCulture = CultureInfo.InvariantCulture;
         public int TouchHotkey { get; set; } = Convert.ToInt32(Keys.D1, _defaultParsingCulture);
